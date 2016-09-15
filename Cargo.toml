@@ -1,0 +1,11 @@
+[package]
+name = "pie_coin"
+version = "0.1.0"
+authors = ["Toby Hughes <tobywhughes@gmail.com>"]
+
+[dependencies]
+time = "*"
+rand = "*"
+rust-crypto = "*"
+rustc-serialize = "*"
+bincode = "*"
