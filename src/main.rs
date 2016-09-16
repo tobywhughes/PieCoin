@@ -4,39 +4,47 @@ extern crate bincode;
 
 use bincode::rustc_serialize::{encode, decode, encode_into, decode_from};
 use std::fs::File;
+use std::io::prelude::*;
+use std::env;
 
 mod blockchain;
 mod tcp;
 
 fn main() {
-  	//Gets a hash and the corresponding block header
-	let (gen_hash, gen_block) = blockchain::init_hash(String::from_utf8(vec![0;32]).unwrap());
-	//Checks if hash is valid. If the block is hashed twice with Sha256, the resulting string should match the hash
-	println!("Valid Hash: {}", blockchain::check_hash(gen_hash.to_string(), gen_block.clone()));
-	//Creates two more blocks for the blockchain
-	let (hash1, block1) = blockchain::init_hash(gen_hash.to_string());
-	let (hash2, block2) = blockchain::init_hash(hash1.to_string());
-	let mut bchain = vec![blockchain::BlockChainNode::new(String::from_utf8(vec![0;32]).unwrap(), gen_block)];
-	bchain.push(blockchain::BlockChainNode::new(gen_hash, block1));
-	bchain.push(blockchain::BlockChainNode::new(hash1, block2));
-	let mut counter = 0;
-	for i in bchain.clone(){
-		println!("\n\nBlock#{}", counter);
-		print_bchainnode(i);
-		counter += 1;
+	let mut file_exists : bool = true;
+
+	let mut arg_vec : Vec<String> = Vec::new();
+
+	for i in env::args(){
+		arg_vec.push(i);
 	}
 
-	{
-		let mut file = File::create("blockchain.bin").unwrap();
-		encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();		
+	for i in arg_vec{
+		if i == "--create" {
+			file_exists = false;
+		}
+	}
+
+	if file_exists == false {
+  		//Gets a hash and the corresponding block header
+		let (gen_hash, gen_block) = blockchain::init_hash(String::from_utf8(vec![0;32]).unwrap());
+		let bchain = vec!(blockchain::BlockChainNode::new(String::from_utf8(vec![0;32]).unwrap(), gen_block));
+		//Checks if hash is valid. If the block is hashed twice with Sha256, the resulting string should match the hash
+		{	
+			let mut file = File::create("blockchain.bin").unwrap();
+			encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();		
+		}
+
 	}
 
 	let mut file = File::open("blockchain.bin").unwrap();	
-	let decoded : Vec<blockchain::BlockChainNode> = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+	let mut bchain : Vec<blockchain::BlockChainNode> = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+
+	//TODO FIGURE OUT HOW TO PUSH MINED BLOCKS TO VECTOR
 
 	println!("FILE DECODE CHECK");
-	counter = 0;
-	for i in decoded{
+	let mut counter = 0;
+	for i in bchain{
 		println!("\n\nBlock#{}", counter);
 		print_bchainnode(i);
 		counter += 1;
@@ -57,4 +65,9 @@ fn print_blockcontents(b : blockchain::BlockContents){
 	println!("Time (in seconds): {}", b.t_sec);
 	println!("Bitsize: {}", b.b_size);
 	println!("Nonce: {}", b.n);
+}
+
+fn mine_block(prev_hash : String) -> blockchain::BlockChainNode {
+	let (hash, block_header) = blockchain::init_hash(prev_hash.to_string());
+	blockchain::BlockChainNode::new(prev_hash, block_header)
 }

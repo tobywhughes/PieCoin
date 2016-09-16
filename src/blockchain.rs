@@ -128,4 +128,13 @@ pub fn init_merkle_coinbase() -> String{
 	sha_2.result_str()
 }
 
+pub fn do_hash(b : BlockContents) -> String{
+	let hash_string = format!("{}{}{}{}{}{}", b.v, b.p_hash, b.m_tree, b.t_sec, b.b_size, b.n);
+	let mut sha_1 = Sha256::new();
+	let mut sha_2 = Sha256::new();
+	sha_1.input_str(&hash_string);
+	sha_2.input_str(&sha_1.result_str());
+	sha_2.result_str()	
+}
+
 
