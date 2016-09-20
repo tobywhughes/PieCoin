@@ -14,22 +14,22 @@ mod tcp;
 fn main() {
 	let mut file_exists : bool = true;
 	let mut mine_blocks : bool = false;
+	let mut print_bchain : bool = true;
 
-	let mut arg_vec : Vec<String> = Vec::new();
-
+	//Iterates through command line arguments
 	for i in env::args(){
-		arg_vec.push(i);
-	}
-
-	for i in arg_vec{
 		if i == "--create" {
 			file_exists = false;
 		}
-		if i == "--mine" {
+		else if i == "--mine" {
 			mine_blocks = true;
+		}
+		else if i == "--silent" {
+			print_bchain = false;
 		}
 	}
 
+	//If no genesis block exits, create it
 	if file_exists == false {
   		//Gets a hash and the corresponding block header
 		let (gen_hash, gen_block) = blockchain::init_hash(String::from_utf8(vec![0;32]).unwrap());
@@ -42,32 +42,41 @@ fn main() {
 
 	}
 
+	//Opens file and reads into blockchain
 	let mut file = File::open("blockchain.bin").unwrap();	
 	let mut bchain : Vec<blockchain::BlockChainNode> = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
 
+	//Creates command line reader and input string
 	let stdin = io::stdin();
 	let input = &mut String::new();
 
+	//Mines blocks until told to stop
 	while mine_blocks{
+		//Grabs top element
 		let ref top_elem = bchain.clone()[bchain.len() - 1];
+		//Takes hash of block and uses that to feed the mining function
 		let mined_block = mine_block(blockchain::do_hash(top_elem.clone().current_block));
 		bchain.push(mined_block);
+		//Input to leave mining
 		println!("\nPrint 'x' to stop mining:");
 		input.clear();
 		stdin.read_line(input);
 		if input == "x\n" {
+			//Saves new blocks to the blockchain
 			let mut file = File::create("blockchain.bin").unwrap();
 			encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();
 			break;
 		}
 	}
 
-	println!("FILE DECODE CHECK");
+	//Prints out entire blockchain
 	let mut counter = 0;
-	for i in bchain{
-		println!("\n\nBlock#{}", counter);
-		print_bchainnode(i);
-		counter += 1;
+	if print_bchain {
+		for i in bchain{
+			println!("\n\nBlock#{}", counter);
+			print_bchainnode(i);
+			counter += 1;
+		}
 	}
 }
 
