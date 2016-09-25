@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io;
 use std::env;
+use std::thread;
 
 mod blockchain;
 mod tcp;
@@ -15,6 +16,7 @@ fn main() {
 	let mut file_exists : bool = true;
 	let mut mine_blocks : bool = false;
 	let mut print_bchain : bool = true;
+	let mut tcp_test : bool = false;
 
 	//Iterates through command line arguments
 	for i in env::args(){
@@ -27,7 +29,16 @@ fn main() {
 		else if i == "--silent" {
 			print_bchain = false;
 		}
+
+		else if i == "--tcptest"{
+			tcp_test = true;
+		}
 	}
+
+	//Commented until tcp is figured out
+	thread::spawn(|| {
+		tcp::tcp_listen();
+	});
 
 	//If no genesis block exits, create it
 	if file_exists == false {
@@ -78,6 +89,19 @@ fn main() {
 			counter += 1;
 		}
 	}
+
+	let ip_addr = &mut String::new();
+	if tcp_test {
+		println!("\nInput IP: ");
+		stdin.read_line(ip_addr);
+	}
+
+	//Holds the program open
+	while true {
+		if tcp_test {
+			tcp::tcp_stream(ip_addr.to_string());
+		}
+	};
 }
 
 fn print_bchainnode(node : blockchain::BlockChainNode){
