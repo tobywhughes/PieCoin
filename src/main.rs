@@ -97,11 +97,9 @@ fn main() {
 	}
 
 	//Holds the program open
-	while true {
-		if tcp_test {
-			tcp::tcp_stream(ip_addr.to_string());
-		}
-	};
+	if tcp_test {
+		tcp::tcp_stream(ip_addr.to_string());
+	}
 }
 
 fn print_bchainnode(node : blockchain::BlockChainNode){
