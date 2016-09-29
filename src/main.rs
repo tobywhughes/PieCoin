@@ -11,12 +11,14 @@ use std::thread;
 
 mod blockchain;
 mod tcp;
+mod transactions;
 
 fn main() {
 	let mut file_exists : bool = true;
 	let mut mine_blocks : bool = false;
 	let mut print_bchain : bool = true;
 	let mut tcp_test : bool = false;
+	let mut create_trans_test : bool = false;
 
 	//Iterates through command line arguments
 	for i in env::args(){
@@ -33,6 +35,17 @@ fn main() {
 		else if i == "--tcptest"{
 			tcp_test = true;
 		}
+		else if i == "--transtest" {
+			create_trans_test = true;
+		}
+	}
+
+	if create_trans_test {
+		transactions::create_example_file();
+		let mut file = File::open("extrans.bin").unwrap();
+		let mut trans_string : String = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+		transactions::parse_trans_script(trans_string);
+		
 	}
 
 	//Commented until tcp is figured out
