@@ -54,17 +54,7 @@ fn main() {
 	});
 
 	//If no genesis block exits, create it
-	if file_exists == false {
-  		//Gets a hash and the corresponding block header
-		let (gen_hash, gen_block) = blockchain::init_hash(String::from_utf8(vec![0;32]).unwrap());
-		let bchain = vec!(blockchain::BlockChainNode::new(String::from_utf8(vec![0;32]).unwrap(), gen_block));
-		//Checks if hash is valid. If the block is hashed twice with Sha256, the resulting string should match the hash
-		{	
-			let mut file = File::create("blockchain.bin").unwrap();
-			encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();		
-		}
-
-	}
+	if !file_exists {create_genesis_block();}
 
 	//Opens file and reads into blockchain
 	let mut file = File::open("blockchain.bin").unwrap();	
@@ -134,4 +124,16 @@ fn print_blockcontents(b : blockchain::BlockContents){
 fn mine_block(prev_hash : String) -> blockchain::BlockChainNode {
 	let (hash, block_header) = blockchain::init_hash(prev_hash.to_string());
 	blockchain::BlockChainNode::new(prev_hash, block_header)
+}
+
+//Generates first block in blockchain, the genesis block
+fn create_genesis_block() {
+  //Gets a hash and the corresponding block header, throws away hash as it is
+  //not used
+  let ( _ , gen_block) = blockchain::init_hash(String::from_utf8(vec![0;32]).unwrap());
+  let bchain = vec!(blockchain::BlockChainNode::new(String::from_utf8(vec![0;32]).unwrap(), gen_block));
+  {
+    let mut file = File::create("blockchain.bin").unwrap();
+    encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();
+  }
 }

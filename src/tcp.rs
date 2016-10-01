@@ -35,15 +35,23 @@ pub fn tcp_stream(ip : String) {
 	let str = ip + &port;
 	let mut stream = TcpStream::connect(&*str).unwrap();
 	//Test string to send
-	let _ = stream.write(b"foo");
+	let f = File::open("blockchain.bin").unwrap();
+  let mut byte_buffer = Vec::new();
+  for byte in f.bytes(){
+    byte_buffer.push(byte.unwrap());
+  }
+  let buffer = &byte_buffer[..];
+	let _ = stream.write(buffer);
 }
 
 //Handles incoming connections to tcp listener
 fn handle_client(mut stream : TcpStream){
-	//Prints test string
-	let str = &mut String::new();
-	stream.read_to_string(str);
-	println!("{}", str);
+	let mut byte_buffer : Vec<u8> = Vec::new();
+  stream.read_to_end(&mut byte_buffer);
+  let mut f = File::create("bchaintemp.bin").unwrap();
+  let buffer = &byte_buffer[..];
+  f.write_all(buffer);
+  
 	//Logs ip
 	let ip = stream.peer_addr().unwrap().ip();
 	println!("{}", ip);
