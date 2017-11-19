@@ -1,6 +1,8 @@
+extern crate serde;
+
 extern crate bincode;
 
-use bincode::rustc_serialize::{encode_into, decode_from};
+use bincode::{serialize, deserialize, deserialize_from, serialize_into, Infinite};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use std::io::prelude::*;
@@ -54,7 +56,8 @@ pub fn create_example_file() {
 	let script_header : String = generate_header(script.clone());
 	let hex_string : String = script_header + &script;
 	let mut file = File::create("extrans.bin").unwrap();
-	encode_into(&hex_string, &mut file, bincode::SizeLimit::Infinite).unwrap();
+	let encode = serialize(&hex_string, Infinite).unwrap();
+	file.write(&encode);
 }
 
 //Generates a checksum from provided script. Checksum is first 4 bytes of Sha256(Sha256(Payload))

@@ -1,8 +1,11 @@
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+
 extern crate crypto;
-extern crate rustc_serialize;
 extern crate bincode;
 
-use bincode::rustc_serialize::{encode, decode, encode_into, decode_from};
+use bincode::{serialize, deserialize, deserialize_from, serialize_into, Infinite};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io;
@@ -40,13 +43,15 @@ fn main() {
 		}
 	}
 
-	if create_trans_test {
-		transactions::create_example_file();
-		let mut file = File::open("extrans.bin").unwrap();
-		let mut trans_string : String = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
-		transactions::parse_trans_script(trans_string);
+	//Keep commented until serialization fixed
+
+	// if create_trans_test {
+	// 	transactions::create_example_file();
+	// 	let mut file = File::open("extrans.bin").unwrap();
+	// 	let mut trans_string : String = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+	// 	transactions::parse_trans_script(trans_string);
 		
-	}
+	// }
 
 	//Commented until tcp is figured out
 	thread::spawn(|| {
@@ -57,12 +62,12 @@ fn main() {
 	if !file_exists {create_genesis_block();}
 
 	//Opens file and reads into blockchain
-	let mut file = File::open("blockchain.bin").unwrap();	
-	let mut bchain : Vec<blockchain::BlockChainNode> = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+	let mut file = File::open("blockchain.bin").unwrap();
+	let mut bchain : Vec<blockchain::BlockChainNode> = deserialize_from(&mut file, Infinite).unwrap();
 
 	//Creates command line reader and input string
 	let stdin = io::stdin();
-	let input = &mut String::new();
+	let mut input = String::new();
 
 	//Mines blocks until told to stop
 	while mine_blocks{
@@ -73,12 +78,16 @@ fn main() {
 		bchain.push(mined_block);
 		//Input to leave mining
 		println!("\nPrint 'x' to stop mining:");
-		input.clear();
-		stdin.read_line(input);
-		if input == "x\n" {
+		let mut input = String::new();
+		io::stdin().read_line(&mut input);
+		print!("{}", input);
+		let teststring = String::from("x");
+		if "x" == input.trim() {
+			println!("test");
 			//Saves new blocks to the blockchain
 			let mut file = File::create("blockchain.bin").unwrap();
-			encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();
+			let mut encode: Vec<u8> = serialize(&bchain, Infinite).unwrap();
+			file.write(&encode);
 			break;
 		}
 	}
@@ -134,6 +143,8 @@ fn create_genesis_block() {
   let bchain = vec!(blockchain::BlockChainNode::new(String::from_utf8(vec![0;32]).unwrap(), gen_block));
   {
     let mut file = File::create("blockchain.bin").unwrap();
-    encode_into(&bchain, &mut file, bincode::SizeLimit::Infinite).unwrap();
+	let mut encode: Vec<u8> = serialize(&bchain, Infinite).unwrap();
+	file.write(&encode);
+    //deserialize_from(&bchain, &mut Infinite).unwrap();
   }
 }

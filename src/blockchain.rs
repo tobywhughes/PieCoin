@@ -1,3 +1,4 @@
+extern crate serde;
 extern crate time;
 
 use crypto::digest::Digest;
@@ -9,7 +10,7 @@ use std::io::stdout;
 static VERSION : u32 = 1;
 
 //Struct to hold all items in a block. If a hash is taken, it will be the hash in the blockchain
-#[derive(RustcEncodable, RustcDecodable, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BlockContents {
 	pub v : u32,
 	pub p_hash : String,
@@ -21,7 +22,7 @@ pub struct BlockContents {
 
 //A node on the blockchain. Currently holds the previous hash and the current block.
 //Will eventually hold information about transactions, but transaction system yet to be implemented
-#[derive(RustcEncodable, RustcDecodable, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BlockChainNode {
 	pub p_hash : String,
 	pub current_block : BlockContents,

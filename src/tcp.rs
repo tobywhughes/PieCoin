@@ -1,6 +1,7 @@
+extern crate serde;
 extern crate bincode;
 
-use bincode::rustc_serialize::{encode_into, decode_from};
+use bincode::{serialize, deserialize, deserialize_from, serialize_into, Infinite};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream, SocketAddrV4, Ipv4Addr};
 use std::thread;
@@ -70,7 +71,7 @@ fn ip_log(ip : String){
 	if file_exists {
 		//Opens file and saves contents to string vector
 		let mut file = File::open("iplog.bin").unwrap();
-		let mut ipvec : Vec<String> = decode_from(&mut file, bincode::SizeLimit::Infinite).unwrap();
+		let mut ipvec : Vec<String> = deserialize_from(&mut file, Infinite).unwrap();
 		//Checks if current IP is in list
 		let mut ip_exists : bool = false;
 		for i in ipvec.clone() {
@@ -85,13 +86,15 @@ fn ip_log(ip : String){
 		}
 		//Save list back to file
 		let mut c_file = File::create("iplog.bin").unwrap();
-		encode_into(&ipvec, &mut c_file, bincode::SizeLimit::Infinite).unwrap();
+		let encode = serialize(&ipvec, Infinite).unwrap();
+		c_file.write(&encode);
 	}
 	else{
 		//Creates an iplog and saves IP as first element
 		let mut file = File::create("iplog.bin").unwrap();
 	        let ipvec = vec!(ip);
-		encode_into(&ipvec, &mut file, bincode::SizeLimit::Infinite).unwrap();	
+		let encode = serialize(&ipvec, Infinite).unwrap();
+		file.write(&encode);	
 	}
 }
 
